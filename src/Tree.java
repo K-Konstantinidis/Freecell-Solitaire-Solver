@@ -54,14 +54,14 @@ public class Tree extends Define{
 		givenNode.setMethod(method); //Set the search method
 		
 		Instant timer = Instant.now(); //Create a timer
-		Long timeElapsed = Duration.between(Instant.now(), Instant.now()).toMillis(); //Get current time
+		Long timeElapsed = Duration.between(timer, Instant.now()).toMillis(); //Get elapsed time
 		
 		expand = 0;
 		nodes.add(givenNode); //Add the node in the tree
 
 		//While the tree isn't empty and we haven't found a solution
 		while(!nodes.isEmpty() && !solution) {
-			if(timeElapsed < timeout) {
+			if(timeElapsed > timeout) {
 				System.out.println("Timeout..\n"); //If we hit the timeout mark
 				System.exit(1);
 			}
@@ -95,7 +95,7 @@ public class Tree extends Define{
 			writeToFile(solutionNodes, out);
 		}
 		else{
-			System.out.println("There is no solution!"); //If we didn;t find a solution exit
+			System.out.println("There is no solution!"); //If we didn't find a solution exit
 			System.exit(1);
 		}
 	}

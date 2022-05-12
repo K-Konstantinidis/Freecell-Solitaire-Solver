@@ -1,6 +1,7 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.Objects;
 
 /**
 						MIT License
@@ -76,7 +77,7 @@ public class Freecell extends Define{
 
 			String line = breader.readLine(); //Read each line separately
 			stack=0; //1st stack
-			noOfCards=0; //Zero cards
+			noOfCards=0; //We start with 0 cards
 
 			while(line != null) {
 				String[] cards = line.split(" "); //Split the line every time you find a space
@@ -112,7 +113,7 @@ public class Freecell extends Define{
 
 	//This function check if a card is valid
 	private static boolean is_valid(Card card) {
-		if(card.getColor().equals("empty") || card.getNumber()<0)
+		if(Objects.equals(card.getColor(), "empty") || card.getNumber()<0)
 			return false;
 	
 		return true;

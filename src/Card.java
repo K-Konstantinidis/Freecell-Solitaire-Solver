@@ -41,6 +41,18 @@ public class Card {
 			color = "empty";
 	}
 		
+	//This function creates a clone of a card
+	@Override
+	public Card clone() {
+		return new Card(this.suit, this.number);
+	}
+	
+	//This function creates a unique hash code for each object
+	@Override
+	public int hashCode() {
+		return Objects.hash(color, suit, number);
+	}
+	
 	//This function compares 2 cards to see if they are the same or not 
 	@Override
 	public boolean equals(Object o) {

@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Stack;
 
 /**
@@ -31,7 +32,7 @@ public class Node extends Define implements Comparable<Node>{
 	private ArrayList<Card> freecells; //An ArrayList for the 4 freecells
 	private ArrayList<Stack<Card>> foundations; //An ArrayList that has a stack of cards in each of the 4 foundations
 	private ArrayList<Stack<Card>> tableau; //An ArrayList that has a stack of cards in each of the 8 tableau stacks 
-	private HashMap<Card, String> position; //A map with a card and ts position
+	private HashMap<Card, String> position; //A map with a card and its position
 	public int g; //The g value of the node 
 	public int h; //The h value of the node 
 	public int f; //The f value of the node 
@@ -88,9 +89,9 @@ public class Node extends Define implements Comparable<Node>{
 	public ArrayList<Node> findChildren(int method) {
 		ArrayList<Node> children = new ArrayList<Node>();
 		
-		children.addAll(this.fromFreecells(method));
-		children.addAll(this.fromFoundation(method));
-		children.addAll(this.fromTableau(method));
+		children.addAll(fromFreecells(method));
+		children.addAll(fromFoundation(method));
+		children.addAll(fromTableau(method));
 
 		return children;
 	}
@@ -108,10 +109,10 @@ public class Node extends Define implements Comparable<Node>{
 			return children;
 
 		for(Card c : this.getFreecells()) {
-			card = c; //Get each card from the freecells
+			card = c.clone(); //Get a copy for each card from the freecells
 
 			//Move card to fn
-			child = ToFoundation(card, this.getFoundation(card.getSuit()));
+			child = ToFoundation(card, getFoundation(this, card.getSuit()));
 
 			//If move was successful
 			if(child != null)
@@ -121,7 +122,7 @@ public class Node extends Define implements Comparable<Node>{
 			
 			//Move to main Tableau
 			for(i=0; i<S; i++) {
-				Stack<Card> cardStack = this.getTableau().get(i);
+				Stack<Card> cardStack = getTableau().get(i);
 
 				//If stack is empty or the top card of the stack is 1 number bigger than our card and its color is different
 				if(cardStack.isEmpty() || ((card.getNumber() == (cardStack.peek().getNumber()-1)) && (!card.getColor().equalsIgnoreCase(cardStack.peek().getColor())))) {
@@ -131,14 +132,14 @@ public class Node extends Define implements Comparable<Node>{
 					if(cardStack.isEmpty() && flag)
 						continue;
 
-					child = this;
+					child = this.clone();
 
 					child.moveToTableau(card, child.getTableau().get(i)); //Move the card to the tableau
 					child.setParent(this);			//Set the parent
 					child.setMethod(method);		//And the method
 					child.setH(child.heuristic());	//And the heuristic value
 					child.setF(method, child);		//And the f value(if we have to)
-					child.setG(this.getG() + 1);	//And the g value
+					child.setG(getG() + 1);	//And the g value
 
 					//If the stack is empty make flag true
 					if(cardStack.isEmpty()){
@@ -176,7 +177,7 @@ public class Node extends Define implements Comparable<Node>{
 			if(fn.isEmpty())
 				continue;
 
-			card = fn.peek(); //Get the top card of the fn
+			card = fn.peek().clone(); //Get the top card of the fn
 			
 			//Move card to fc
 			child = ToFreecell(card);
@@ -185,7 +186,7 @@ public class Node extends Define implements Comparable<Node>{
 			if(child != null)
 				children.add(child);
 			
-			child=null;
+			child = null;
 
 			//Move to main Tableau
 			for(j=0; j<S; j++) {
@@ -199,9 +200,10 @@ public class Node extends Define implements Comparable<Node>{
 					if(cardStack.isEmpty() && flag)
 						continue;
 					
-					child = this;
+					//Make a copy of the current node
+					child = this.clone();
 
-					child.moveToTableau(card, child.getTableau().get(j)); //Move the card to the tableau
+					child .moveToTableau(card, child.getTableau().get(j)); //Move the card to the tableau
 					child.setParent(this);			//Set the parent
 					child.setMethod(method);		//And the method
 					child.setH(child.heuristic());	//And the heuristic value
@@ -243,10 +245,10 @@ public class Node extends Define implements Comparable<Node>{
 			if(thisStack.isEmpty()) 
 				continue;
 
-			card = thisStack.peek(); //Get the top card of the tableau stack
+			card = thisStack.peek().clone(); //Get the top card of the tableau stack
 
 			//Move card to fn
-			child = ToFoundation(card, this.getFoundation(card.getSuit()));
+			child = ToFoundation(card, getFoundation(this, card.getSuit()));
 			
 			//If move was successful
 			if(child != null)
@@ -285,7 +287,7 @@ public class Node extends Define implements Comparable<Node>{
 					if(cardStack.isEmpty() && flag)
 						continue;
 					
-					child = this;
+					child = this.clone();
 
 					child.moveToTableau(card, child.getTableau().get(j)); //Move the card to the tableau
 					child.setParent(this);			//Set the parent
@@ -316,15 +318,15 @@ public class Node extends Define implements Comparable<Node>{
 	}
 	
 	//This function returns the correct foundation stack for each card suit
-	public Stack<Card> getFoundation(char suit){
+	public Stack<Card> getFoundation(Node node, char suit){
 		if(suit == 'D')
-			return this.getFoundations().get(0);
+			return node.getFoundations().get(0);
 		if(suit == 'S')
-			return this.getFoundations().get(1);
+			return node.getFoundations().get(1);
 		if(suit == 'C')
-			return this.getFoundations().get(2);
+			return node.getFoundations().get(2);
 		if(suit == 'H')
-			return this.getFoundations().get(3);
+			return node.getFoundations().get(3);
 		
 		return null;
 	}
@@ -339,9 +341,9 @@ public class Node extends Define implements Comparable<Node>{
 		//If fn is empty and we have an Ace trying to go there or
 		//if the fn is not empty and the number of our card is 1 no bigger thann the last fn card and the card suits are the same
 		if((fn.isEmpty() && card.getNumber() == 0) || (!fn.isEmpty() && ((card.number == (fn.peek().getNumber()+1)) && (card.suit == fn.peek().getSuit())))) {
-			Node child = this;
+			Node child = this.clone();
 
-			child.moveToFn(card); 			//Move the card to foundation
+			child.moveToFn(card, getFoundation(child, card.suit)); 			//Move the card to foundation
 			child.setParent(this);			//Set the parent
 			child.setMethod(method);		//And the method
 			child.setH(child.heuristic());	//And the heuristic value
@@ -362,7 +364,7 @@ public class Node extends Define implements Comparable<Node>{
 	//		Node: child
 	public Node ToFreecell(Card card) {
 		if(this.freecells.size() < 4){
-			Node child = this;
+			Node child = this.clone();
 			
 			child.moveToFc(card); //Move the card to freecell
 			child.setParent(this);			//Set the parent
@@ -379,10 +381,10 @@ public class Node extends Define implements Comparable<Node>{
 	
 	//This function removes the card from its position
 	//and moves it to a foundation
-	public void moveToFn(Card card) {
+	public void moveToFn(Card card, Stack<Card> fn) {
 		removeCard(card);
-		this.getFoundation(card.getSuit()).add(card);
-		position.put(card, "source");
+		fn.add(card);
+		this.getPosition().put(card, "source");
 	}
 	
 	//This function removes the card from its position
@@ -390,7 +392,7 @@ public class Node extends Define implements Comparable<Node>{
 	public void moveToTableau(Card card, Stack<Card> stack) {
 		removeCard(card);
 		stack.add(card);
-		position.put(card, "stack");
+		this.getPosition().put(card, "stack");
 	}
 	
 	//This function removes the card from its position
@@ -398,16 +400,16 @@ public class Node extends Define implements Comparable<Node>{
 	public void moveToFc(Card card) {
 		removeCard(card);
 		this.getFreecells().add(card);
-		position.put(card, "freecell");
+		this.getPosition().put(card, "freecell");
 	}
 	
 	//This function removes a card from its position
 	public void removeCard(Card card) {
-		if(position.get(card).equalsIgnoreCase("freecell"))
-			freecells.remove(card);
-		else if(position.get(card).equalsIgnoreCase("source"))
-			this.getFoundation(card.getSuit()).remove(card);
-		else if(position.get(card).equalsIgnoreCase("stack")){
+		if(this.getPosition().get(card).equalsIgnoreCase("freecell"))
+			this.getFreecells().remove(card);
+		else if(this.getPosition().get(card).equalsIgnoreCase("source"))
+			getFoundation(this, card.getSuit()).remove(card);
+		else if(this.getPosition().get(card).equalsIgnoreCase("stack")){
 			for(Stack<Card> s : this.getTableau()){
 				if(!s.isEmpty() && s.peek().equals(card)) {
 					s.pop();
@@ -428,7 +430,7 @@ public class Node extends Define implements Comparable<Node>{
 
 		for(Stack<Card> s : this.getTableau())
 			for(Card c : s)
-				score += manhattan_distance(c, "tableau");
+				score += manhattan_distance(c, "stack");
 
 		return score;
 	}
@@ -438,7 +440,7 @@ public class Node extends Define implements Comparable<Node>{
 	//This function is called whenever there is a card in the tableau
 	//or in a freecell. So the score will always be at least 1 (move),
 	//as it has to move at least once to go to the source(fn).
-	int manhattan_distance(Card card, String position){
+	int manhattan_distance(Card card, String pos){
 		int x, y;
 
 		//Card does not exist -> error
@@ -450,10 +452,8 @@ public class Node extends Define implements Comparable<Node>{
 	    //x=1 because the card is not in the foundation
 	    //so we have to make at least 1 move to send it there.
 	    x = 1;
-	    if(card.number == 0)
-	    	y = 0;
-	    else
-	    	y = get_y(card, position);
+
+    	y = get_y(card, pos);
 
 		return x+y;
 	}	
@@ -467,17 +467,17 @@ public class Node extends Define implements Comparable<Node>{
 	//there before we put H5 are H3,H4->2 cards). After that it will count the
 	//cards that are on top of H5 e.g. lets say that the sequence is H5->C5->S3,
 	//then the returning number will be 2. So the final return will be 2+2=4 moves.
-	int get_y(Card card, String position){
+	int get_y(Card card, String pos){
 	    int count=0, count2=0, i=0;
 	    Stack<Card> stackFound = null;
 	    boolean found=false;
-	    Stack<Card> fn = this.getFoundation(card.getSuit());
+	    Stack<Card> fn = getFoundation(this, card.getSuit());
 
 	    count = Math.abs(fn.size() - card.number);
 	   
 	    //Try to find the card in the tableau to see how many cards
 	    //are on top of it.
-	    if(position.equals("tableau")) {
+	    if(Objects.equals(pos, "stack")) {
 	    	for(Stack<Card> stack : this.tableau) {
 	    		for(Card c : stack) {
 	    			if(c.equals(card)) {
@@ -501,6 +501,42 @@ public class Node extends Define implements Comparable<Node>{
 	    }
 		    
 		return count+count2;
+	}
+	
+	
+	//This function creates a copy of a node
+	@Override
+	public Node clone() {
+		Node node = new Node();
+		int i;
+		
+		node.setMethod(this.getMethod());
+		
+		for(Card c : this.getFreecells()) {
+			node.getFreecells().add(c.clone());
+			node.getPosition().put(c, "freecell");
+		}
+		
+		for(i=0; i<4; i++) {
+			for(Card c : getFoundations().get(i)) {
+				node.getFoundations().get(i).add(c.clone());
+				node.getPosition().put(c, "source");
+			}
+		}
+		
+		for(i=0; i<S; i++) {
+			for(Card c : getTableau().get(i)) {
+				node.getTableau().get(i).add(c.clone());
+				node.getPosition().put(c, "stack");
+			}
+		}
+		return node;
+	}
+	
+	//This function creates a unique hash code for each object
+	@Override
+	public int hashCode() {
+		return Objects.hash(foundations, freecells, method, tableau);
 	}
 	
 	//This function compares to nodes
@@ -597,7 +633,6 @@ public class Node extends Define implements Comparable<Node>{
 				return false;
 		}
 		return true;
-
 	}
 	
 	//Getters

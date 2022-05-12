@@ -539,7 +539,7 @@ public class Node extends Define implements Comparable<Node>{
 		return Objects.hash(foundations, freecells, method, tableau);
 	}
 	
-	//This function compares to nodes
+	//This function compares two nodes
 	@Override
 	public int compareTo(Node node) {
 		//If we have the same node no need to check something
